@@ -51,13 +51,20 @@
       .smaller-text {
         font-size: 0.6em;
       }
-	  .monospace {
-		font-family: monospace;
-	  }
-	  .side-by-side {
-		display: flex;
-		flex-direction: row;
-	  }
+      .monospace {
+        font-family: monospace;
+      }
+      .side-by-side {
+        display: flex;
+        flex-direction: row;
+      }
+      .side-by-side > * {
+        flex: 1;
+      }
+      span.emphasized {
+        font-weight: bolder;
+        color: rgb(19, 61, 128);
+      }
     </style>
   </head>
   <body>
@@ -75,61 +82,30 @@
         </section>
         <section>
           <section>
-            <h2>Unit testing provides benefits</h2>
-            <ul>
-              <li>Early bug detection</li>
-              <li>Regression prevention</li>
-              <li>Continuous Integration</li>
-              <li>Refactoring support</li>
-              <li>Better design</li>
-              <li>Better code quality</li>
-              <li>Living Documentation</li>
-              <li>and more!</li>
-            </ul>
+            <h2>What is a unit test?</h2>
           </section>
           <section>
-            <blockquote>
-              The more effort I put into testing the product conceptually at the
-              start of the process, the less effort I [have] to put into
-              manually testing the product at the end because fewer bugs ...
-              emerge as a result.
-            </blockquote>
-            <p class="author">
-              Trish Khoo, Director of Engineering at Octopus Deploy
-            </p>
+            <p>A unit test is a type of <span class="emphasized">automated</span> test which <span class="emphasized">validates logic</span> at the <span class="emphasized">lowest level</span> possible.</p>
+          </section>
+          <section>
+            <div>
+              <img
+                src="https://miro.medium.com/v2/resize:fit:640/format:webp/1*lqWygfNJqWQ4VCyjecQ6Eg.png"
+                alt="Testing Pyramid"
+              />
+            </div>
+            <span class="credit">
+              Credit: Moke Cohn, Martin Fowler, and Lawrence Tan
+            </span>
+          </section>
+          <section>
+            <h2>My definition</h2>
+            <p>Unit testing is the process of aligning <span class="emphasized">requirements</span> with <span class="emphasized">reality</span>.</p>
           </section>
         </section>
         <section>
-          <h2>Unit testing friction</h2>
-          <ul>
-            <li>Forced to do it</li>
-            <li>Not allowed the time</li>
-            <li>Never learned how to do it well</li>
-          </ul>
-        </section>
-        <section>
-          <h2>My Journey</h2>
-          <img
-            src="https://m.media-amazon.com/images/I/51VAZ9BwcvL.jpg"
-            alt="The Art of Unit Testing"
-          />
-          <span class="credit">(not a sponsor)</span>
-        </section>
-        <section>
-          <h2>What is a unit test?</h2>
-          <div>
-            <img
-              src="https://miro.medium.com/v2/resize:fit:640/format:webp/1*lqWygfNJqWQ4VCyjecQ6Eg.png"
-              alt="Testing Pyramid"
-            />
-          </div>
-          <span class="credit"
-            >Credit: Moke Cohn, Martin Fowler, and Lawrence Tan</span
-          >
-        </section>
-        <section>
           <section>
-            <h2>Key 1: Break it down!</h2>
+            <h2>Thought Exercise</h2>
           </section>
           <section>
             <img class="r-stretch" src="assets/craiyon_door.png" alt="a door" />
@@ -225,7 +201,7 @@
         </section>
         <section>
           <section>
-            <h2>Key 2: Care about test code quality</h2>
+            <h2>Care about test code quality</h2>
             <p class="subtitle">i.e. DRY</p>
           </section>
           <section>
@@ -379,11 +355,9 @@
           </section>
         </section>
         <section>
-          <h2>Key 3: Focus on what matters</h2>
-        </section>
-        <section>
           <section>
-            <h2>Key 4: Use AAA</h2>
+            <h2>Implementing Tests</h2>
+            <p class="subtitle">with AAA</p>
           </section>
           <section>
             <ul>
@@ -395,219 +369,314 @@
         </section>
         <section>
           <section>
-            <h2>Enough talk, let's see the code!</h2>
-          </section>
-          <section>
-            <pre class="r-stretch"><code class="monaco" language="javascript">
-export class PrivacyDoorknob {
-  private _isButtonPressed = false;
-  get isButtonPressed(): boolean {
-    return this._isButtonPressed;
-  }
-
-  pressButton() {
-    this._isButtonPressed = true;
-  }
-
-  turnOutsideKnob(direction: RotationDirection): IKnobInteractionResult {
-    if (this._isButtonPressed) {
-      return {
-        latchBolt: 'extended',
-      };
+            <pre class="r-stretch"><code class="monaco" language="powershell">
+enum LatchBoltState {
+    Extended
+    Retracted
+}
+enum RotationDirection {
+    Clockwise
+    CounterClockwise
+}
+$rotationDirectionOpposite = @{
+    TypeName   = 'RotationDirection'
+    MemberName = 'Opposite'
+    MemberType = 'ScriptMethod'
+    Value      = {
+        if ($this -eq [RotationDirection]::Clockwise) {
+            return [RotationDirection]::CounterClockwise
+        }
+        else {
+            return [RotationDirection]::Clockwise
+        }
     }
-    return {
-      insideKnob: opposite(direction),
-      outsideKnob: direction,
-      latchBolt: 'retracted',
-    };
-  }
+}
+Update-TypeData @rotationDirectionOpposite
 
-  turnInsideKnob(direction: RotationDirection): IKnobInteractionResult {
-    this._isButtonPressed = false;
-
-    return {
-      insideKnob: direction,
-      outsideKnob: opposite(direction),
-      latchBolt: 'retracted',
-    };
-  }
+class KnobInteractionResult {
+    [RotationDirection] $insideKnob
+    [RotationDirection] $outsideKnob
+    [LatchBoltState] $latchBolt
 }
 
-export type RotationDirection = 'clockwise' | 'counterclockwise';
+class PrivacyDoorknob {
+    hidden [boolean] $isButtonPressed = $false
 
-export interface IKnobInteractionResult {
-  outsideKnob?: RotationDirection;
-  insideKnob?: RotationDirection;
-  latchBolt: 'extended' | 'retracted';
-}
+    [boolean] IsButtonPressed() {
+        return $this.isButtonPressed
+    }
 
-function opposite(direction: RotationDirection): RotationDirection {
-  switch (direction) {
-    case 'clockwise':
-      return 'counterclockwise';
-    case 'counterclockwise':
-      return 'clockwise';
-    default:
-      throw new Error(`Invalid direction ${direction}`);
-  }
+    [void] PressButton() {
+        $this.isButtonPressed = $true
+    }
+
+    [KnobInteractionResult] TurnOutsideKnob([RotationDirection] $direction) {
+        if ($this.isButtonPressed) {
+            return [KnobInteractionResult]::new(
+                $null,
+                $null,
+                [LatchBoltState]::Extended
+            )
+        }
+        return [KnobInteractionResult]::new(
+            $direction.Opposite(),
+            $direction,
+            [LatchBoltState]::Retracted
+        )
+    }
+    
+    [KnobInteractionResult] TurnInsideKnob([RotationDirection] $direction) {
+        $this.isButtonPressed = $false
+        return [KnobInteractionResult]::new(
+            $direction,
+            $direction.Opposite(),
+            [LatchBoltState]::Retracted
+        )
+    }
 }
-              
 			</code></pre>
           </section>
           <section>
-            <pre class="r-stretch"><code class="monaco" language="javascript">
-describe('', () => {});
+            <pre class="r-stretch"><code class="monaco" language="powershell">
+Describe '' {}
 			</code></pre>
           </section>
           <section>
-            <pre class="r-stretch"><code class="monaco" language="javascript">
-describe('', () => {
-	// * A privacy doorknob,
-	//     * when the push button is pressed,
-	//         * when the user tries to turn the outside knob clockwise,
-	//             * should not turn the outside knob at all.
-	//             * should not turn the inside knob at all.
-	//             * should not retract the latch bolt.
-	//         * when the user tries to turn the outside knob counterclockwise,
-	//             * should not turn the outside knob at all.
-	//             * should not turn the inside knob at all.
-	//             * should not retract the latch bolt.
-	//         * when the user tries to turn the inside knob clockwise,
-	//             * should pop the push button out.
-	//             * should turn the inside knob clockwise.
-	//             * should turn the outside knob counterclockwise.
-	//             * should retract the latch bolt.
-	//         * when the user tries to turn the inside knob counterclockwise,
-	//             * should pop the push button out.
-	//             * should turn the inside knob counterclockwise.
-	//             * should turn the outside knob clockwise.
-	//             * should retract the latch bolt.
-});
+            <pre class="r-stretch"><code class="monaco" language="powershell">
+Describe '' {
+	# * A privacy doorknob,
+	#     * when the push button is pressed,
+	#         * when the user tries to turn the outside knob clockwise,
+	#             * should not turn the outside knob at all.
+	#             * should not turn the inside knob at all.
+	#             * should not retract the latch bolt.
+	#         * when the user tries to turn the outside knob counterclockwise,
+	#             * should not turn the outside knob at all.
+	#             * should not turn the inside knob at all.
+	#             * should not retract the latch bolt.
+	#         * when the user tries to turn the inside knob clockwise,
+	#             * should pop the push button out.
+	#             * should turn the inside knob clockwise.
+	#             * should turn the outside knob counterclockwise.
+	#             * should retract the latch bolt.
+	#         * when the user tries to turn the inside knob counterclockwise,
+	#             * should pop the push button out.
+	#             * should turn the inside knob counterclockwise.
+	#             * should turn the outside knob clockwise.
+	#             * should retract the latch bolt.
+}
 			</code></pre>
           </section>
           <section>
-            <pre class="r-stretch"><code class="monaco" language="javascript">
-describe('A privacy doorknob', () => {
-	describe('when the push button is pressed', () => {
-		describe('when the user tries to turn the outside knob clockwise', () => {
-			it('should not turn the outside knob at all');
-			it('should not turn the inside knob at all');
-			it('should not retract the latch bolt');
-		});
-	});
+            <pre class="r-stretch"><code class="monaco" language="powershell">
+Describe 'A privacy doorknob' {
+	Context 'when the push button is pressed' {
+		Context 'when the user tries to turn the outside knob clockwise' {
+			It 'should not turn the outside knob at all' {}
+			It 'should not turn the inside knob at all' {}
+			It 'should not retract the latch bolt' {}
+		}
+	}
 	
-	//         * when the user tries to turn the outside knob counterclockwise,
-	//             * should not turn the inside knob at all.
-	//             * should not retract the latch bolt.
-	//         * when the user tries to turn the inside knob clockwise,
-	//             * should pop the push button out.
-	//             * should turn the inside knob clockwise.
-	//             * should turn the outside knob counterclockwise.
-	//             * should retract the latch bolt.
-	//         * when the user tries to turn the inside knob counterclockwise,
-	//             * should pop the push button out.
-	//             * should turn the inside knob counterclockwise.
-	//             * should turn the outside knob clockwise.
-	//             * should retract the latch bolt.
-});
+	#         * when the user tries to turn the outside knob counterclockwise,
+	#             * should not turn the inside knob at all.
+	#             * should not retract the latch bolt.
+	#         * when the user tries to turn the inside knob clockwise,
+	#             * should pop the push button out.
+	#             * should turn the inside knob clockwise.
+	#             * should turn the outside knob counterclockwise.
+	#             * should retract the latch bolt.
+	#         * when the user tries to turn the inside knob counterclockwise,
+	#             * should pop the push button out.
+	#             * should turn the inside knob counterclockwise.
+	#             * should turn the outside knob clockwise.
+	#             * should retract the latch bolt.
+}
 
 			</code></pre>
           </section>
           <section>
-			<div class="side-by-side r-stretch">
+				<pre class="r-stretch"><code class="monaco" language="powershell">
+It 'should not turn the outside knob at all' {
+    # Arrange
+    . "$PSScriptRoot/Knob.ps1"
+    $knob = New-Object 'PrivacyDoorKnob'
+    $knob.PressButton()
 
-				<pre class="r-stretch"><code class="monaco" language="javascript">
-	
-it('should not turn the outside knob at all', () => {
-	// Arrange
-	const knob = new PrivacyDoorKnob();
-	knob.pressButton();
+    # Act
+    $result = $knob.TurnOutsideKnob([RotationDirection]::Clockwise)
 
-	// Act
-	const result = knob.turnOutsideKnob('clockwise');
-
-	// Assert
-	expect(result.outsideKnob).not.toBeDefined();
-});
-it('should not turn the inside knob at all', () => {
-	// Arrange
-	const knob = new PrivacyDoorKnob();
-	knob.pressButton();
-
-	// Act
-	const result = knob.turnOutsideKnob('clockwise');
-
-	// Assert
-	expect(result.insideKnob).not.toBeDefined();
-});
-it('should not retract the latch bolt', () => {
-	// Arrange
-	const knob = new PrivacyDoorKnob();
-	knob.pressButton();
-
-	// Act
-	const result = knob.turnOutsideKnob('clockwise');
-
-	// Assert
-	expect(result.latchBolt).toBe('extended');
-});
+    # Assert
+    $result.OutsideKnob | Should -Be $null
+}
 				</code></pre>
+          </section>
+          <section>
+				<pre class="r-stretch"><code class="monaco" language="powershell">
+It 'should not turn the outside knob at all' {
+    # Arrange
+    . "$PSScriptRoot/Knob.ps1"
+    $knob = New-Object 'PrivacyDoorKnob'
+    $knob.PressButton()
 
-				<iframe src="https://jasmine-testing-leap-year-nskqvy.stackblitz.io"></iframe>
-			</div>
+    # Act
+    $result = $knob.TurnOutsideKnob([RotationDirection]::Clockwise)
+
+    # Assert
+    $result.OutsideKnob | Should -Be $null
+}
+It 'should not turn the inside knob at all' {
+    # Arrange
+    . "$PSScriptRoot/Knob.ps1"
+    $knob = New-Object 'PrivacyDoorKnob'
+    $knob.PressButton()
+
+    # Act
+    $result = $knob.TurnOutsideKnob([RotationDirection]::Clockwise)
+
+    # Assert
+    $result.InsideKnob | Should -Be $null
+}
+It 'should not retract the latch bolt' {
+    # Arrange
+    . "$PSScriptRoot/Knob.ps1"
+    $knob = New-Object 'PrivacyDoorKnob'
+    $knob.PressButton()
+
+    # Act
+    $result = $knob.TurnOutsideKnob([RotationDirection]::Clockwise)
+
+    # Assert
+    $result.LatchBolt | Should -Be ([LatchBoltState]::Extended)
+}
+				</code></pre>
+          </section>
+          <section>
+        <pre class="r-stretch"><code>PS> Invoke-Pester -Configuration ([PesterConfiguration]@{Output=@{Verbosity="Detailed"}})
+Pester v5.5.0
+
+Starting discovery in 1 files.
+Discovery found 3 tests in 2ms.
+Running tests.
+
+Running tests from 'Knob.Tests.ps1'
+Describing A privacy doorknob
+ Context when the push button is pressed
+  Context when the user tries to turn the outside knob clockwise
+    [+] should not turn the outside knob at all 19ms (7ms|12ms)
+    [+] should not turn the inside knob at all 6ms (6ms|1ms)
+    [+] should not retract the latch bolt 16ms (16ms|1ms)
+Tests completed in 68ms
+Tests Passed: 3, Failed: 0, Skipped: 0 NotRun: 0</code></pre>
+          </section>
+          <section>
+				<pre class="r-stretch"><code class="monaco" language="powershell">
+It 'should not turn the outside knob at all' {
+    # Arrange
+    . "$PSScriptRoot/Knob.ps1"
+    $knob = New-Object 'PrivacyDoorKnob'
+    $knob.PressButton()
+
+    # Act
+    $result = $knob.TurnOutsideKnob([RotationDirection]::Clockwise)
+
+    # Assert
+    $result.OutsideKnob | Should -Be $null
+}
+It 'should not turn the inside knob at all' {
+    # Arrange
+    . "$PSScriptRoot/Knob.ps1"
+    $knob = New-Object 'PrivacyDoorKnob'
+    $knob.PressButton()
+
+    # Act
+    $result = $knob.TurnOutsideKnob([RotationDirection]::Clockwise)
+
+    # Assert
+    $result.InsideKnob | Should -Be $null
+}
+It 'should not retract the latch bolt' {
+    # Arrange
+    . "$PSScriptRoot/Knob.ps1"
+    $knob = New-Object 'PrivacyDoorKnob'
+    $knob.PressButton()
+
+    # Act
+    $result = $knob.TurnOutsideKnob([RotationDirection]::Clockwise)
+
+    # Assert
+    $result.LatchBolt | Should -Be ([LatchBoltState]::Extended)
+}
+				</code></pre>
           </section>
           <section>
 			<h2>Time to DRY</h2>
-            <pre class="r-stretch"><code class="monaco" language="javascript">
-describe('A privacy doorknob', () => {
-	describe('when the push button is pressed', () => {
-		describe('when the user tries to turn the outside knob clockwise', () => {
-			it('should not turn the outside knob at all', () => {
-			// Arrange
-			const knob = new PrivacyDoorknob();
-			knob.pressButton();
-
-			// Act
-			const result = knob.turnOutsideKnob('clockwise');
-
-			// Assert
-			expect(result.outsideKnob).not.toBeDefined();
-			});
-			it('should not turn the inside knob at all', () => {
-			// Arrange
-			const knob = new PrivacyDoorknob();
-			knob.pressButton();
-
-			// Act
-			const result = knob.turnOutsideKnob('clockwise');
-
-			// Assert
-			expect(result.insideKnob).not.toBeDefined();
-			});
-			it('should not retract the latch bolt', () => {
-			// Arrange
-			const knob = new PrivacyDoorknob();
-			knob.pressButton();
-
-			// Act
-			const result = knob.turnOutsideKnob('clockwise');
-
-			// Assert
-			expect(result.latchBolt).toBe('extended');
-			});
-		});
-	});
-});
-				
+            <pre class="r-stretch"><code class="monaco" language="powershell">
+Describe 'A privacy doorknob' {
+    Context 'when the push button is pressed' {
+        Context 'when the user tries to turn the outside knob clockwise' {
+            It 'should not turn the outside knob at all' {
+                # Arrange
+                . "$PSScriptRoot/Knob.ps1"
+                $knob = New-Object 'PrivacyDoorKnob'
+                $knob | Should -Not -Be $null
+                $knob.PressButton()
+            
+                # Act
+                $result = $knob.TurnOutsideKnob([RotationDirection]::Clockwise)
+            
+                # Assert
+                $result.OutsideKnob | Should -Be $null
+            }
+            It 'should not turn the inside knob at all' {
+                # Arrange
+                . "$PSScriptRoot/Knob.ps1"
+                $knob = New-Object 'PrivacyDoorKnob'
+                $knob | Should -Not -Be $null
+                $knob.PressButton()
+            
+                # Act
+                $result = $knob.TurnOutsideKnob([RotationDirection]::Clockwise)
+            
+                # Assert
+                $result.InsideKnob | Should -Be $null
+            }
+            It 'should not retract the latch bolt' {
+                # Arrange
+                . "$PSScriptRoot/Knob.ps1"
+                $knob = New-Object 'PrivacyDoorKnob'
+                $knob | Should -Not -Be $null
+                $knob.PressButton()
+            
+                # Act
+                $result = $knob.TurnOutsideKnob([RotationDirection]::Clockwise)
+            
+                # Assert
+                $result.LatchBolt | Should -Be ([LatchBoltState]::Extended)
+            }
+        }
+    }
+	
+    #         * when the user tries to turn the outside knob counterclockwise,
+    #             * should not turn the inside knob at all.
+    #             * should not retract the latch bolt.
+    #         * when the user tries to turn the inside knob clockwise,
+    #             * should pop the push button out.
+    #             * should turn the inside knob clockwise.
+    #             * should turn the outside knob counterclockwise.
+    #             * should retract the latch bolt.
+    #         * when the user tries to turn the inside knob counterclockwise,
+    #             * should pop the push button out.
+    #             * should turn the inside knob counterclockwise.
+    #             * should turn the outside knob clockwise.
+    #             * should retract the latch bolt.
+}
 			</code></pre>
           </section>
-		  <section>
-        <iframe class="r-stretch" src="https://stackblitz.com/edit/jasmine-testing-leap-year-nazorn?file=src%2Fprivacy-doorknob.ts"></iframe>
-		  </section>
         </section>
         <section>
           <h2>Don't get carried away</h2>
-		  <p class="monospace">function removeVowels(input: string): string {/* TODO */}</p>
+		  <p class="monospace">function Remove-Vowel([string]$input) {&lt;# TODO #&gt;}</p>
 		  <p>
 			Test:
 			<ul>
@@ -656,7 +725,7 @@ describe('A privacy doorknob', () => {
         hash: true,
 
         monaco: {
-          defaultLanguage: "rust",
+          defaultLanguage: "powershell",
         },
 
         // Learn about plugins: https://revealjs.com/plugins/
